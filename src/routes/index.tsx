@@ -173,8 +173,8 @@ function Index() {
               className="h-44 w-44 shrink-0 rounded-full border border-border object-cover object-top shadow-sm sm:h-56 sm:w-56"
             />
           </div>
-          <p className="mt-7 max-w-3xl text-base sm:text-lg leading-relaxed text-muted-foreground text-left sm:text-justify [text-justify:inter-word] [hyphens:auto]">
-            As a Product Manager, I operate where complex systems must be accurate every time from shipping probabilistic ML models for demand forecasting and inventory replenishment, to architecting promo engines and automated payment/refund rails. I thrive in navigating ambiguous constraints, bridging data science and engineering with on-the-ground operations, and owning 0→1 products from concept to scale. Having delivered mission-critical products at KPN Fresh and Quleep, I’m looking to bring deep system ownership and builder rigor to a high-impact, product-first team.
+          <p className="mt-7 max-w-3xl font-sans text-base sm:text-lg leading-relaxed text-muted-foreground">
+            Product Manager operating at the intersection of business, engineering, and design. I architect scalable 0→1 products and high-precision platform systems—from ML demand forecasting to automated transactional rails—turning complex constraints into measurable growth.
           </p>
           <div className="mt-9 flex flex-wrap gap-x-5 gap-y-2 text-sm">
             {socialLinks.map((link) => (
