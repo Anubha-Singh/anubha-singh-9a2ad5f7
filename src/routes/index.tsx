@@ -133,9 +133,10 @@ const skillPillars: SkillPillar[] = [
     ],
   },
   {
-    title: "Data & Forecasting",
-    summary: "Bridging statistical models with on-the-ground ops.",
+    title: "Data & Experimentation",
+    summary: "Demand forecasting, hypothesis testing & operational analytics.",
     skills: [
+      "A/B Experimentation",
       "Demand Forecasting ML",
       "Replenishment Algorithms",
       "Unit Economics & Funnels",
@@ -148,6 +149,7 @@ const skillPillars: SkillPillar[] = [
     skills: [
       "0→1 MVP Scoping & Launch",
       "PRDs & State Machine Specs",
+      "API & Edge-Case Specs",
       "AI Prototyping & Evals",
       "Cross-System UX & GTM",
     ],
