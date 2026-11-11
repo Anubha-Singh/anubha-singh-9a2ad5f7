@@ -46,6 +46,16 @@ export function CaseStudyPage({ study }: { study: CaseStudy }) {
             if (b.type === "h2") return <h2 key={i}>{b.text}</h2>;
             if (b.type === "h3") return <h3 key={i}>{b.text}</h3>;
             if (b.type === "p") return <p key={i}>{b.text}</p>;
+            if (b.type === "pre") {
+              return (
+                <pre
+                  key={i}
+                  className="my-6 overflow-x-auto rounded border border-border bg-card p-4 font-mono text-xs leading-relaxed text-ink shadow-sm"
+                >
+                  {b.text}
+                </pre>
+              );
+            }
             return (
               <ul key={i}>
                 {b.items.map((it, j) => (

@@ -2,7 +2,8 @@ export type Block =
   | { type: "h2"; text: string }
   | { type: "h3"; text: string }
   | { type: "p"; text: string }
-  | { type: "ul"; items: string[] };
+  | { type: "ul"; items: string[] }
+  | { type: "pre"; text: string };
 
 export type CaseStudy = {
   slug: "testmaker" | "promo-manager" | "refunds" | "arnxt" | "trustrent" | string;
@@ -172,8 +173,221 @@ export const cleverTapCaseStudy: CaseStudy = {
   ],
 };
 
+export const demandForecastingCaseStudy: CaseStudy = {
+  slug: "demand-forecasting-replenishment",
+  title: "Multi-Tier Demand Forecasting & Automated Store Replenishment Engine",
+  shortTitle: "Store Replenishment Engine",
+  org: "KPN Fresh",
+  role: "Product Manager – Supply Chain & Inventory Systems",
+  period: "Omnichannel Fresh Retail · 300+ Stores & 6 DCs",
+  summary:
+    "Architected a multi-tier demand forecasting and automated replenishment engine across 300+ retail stores and 6 regional DCs—bridging asynchronous legacy POS and WMS silos into a validated single source of truth, cutting WMAPE by 15.3%, reducing stockouts by 22%, and shrinking perishable wastage by 18%.",
+  metrics: [
+    { value: "15.3%", label: "Relative WMAPE error reduction" },
+    { value: "22%", label: "Reduction in store stockouts" },
+    { value: "18%", label: "Perishable shrink reduction" },
+    { value: "<0.4%", label: "POS-to-ERP data discrepancy" },
+  ],
+  tags: [
+    "Supply Chain",
+    "Demand Forecasting",
+    "Inventory Optimization",
+    "LightGBM",
+    "Odoo ERP",
+    "Data Reconciliation",
+  ],
+  blocks: [
+    { type: "h2", text: "1. Executive Summary & Context" },
+    {
+      type: "p",
+      text: "KPN Fresh manages daily deliveries of high-velocity fresh produce and packaged groceries across 300+ retail stores from 6 regional Collection Centers and Distribution Centers (CC/DC). The core operational bottleneck was not merely forecasting accuracy, but a disconnected, legacy systems architecture:",
+    },
+    {
+      type: "ul",
+      items: [
+        "Asynchronous Legacy Tech Stack: The in-store POS ran on a legacy, locally installed desktop client with no direct websocket or real-time event pipeline to the central database. Store transactions were synced via delayed, end-of-day batch cron jobs.",
+        "Disconnected DC WMS: The Warehouse Management System (WMS) operated as a separate operational silo, meaning inventory allocations, physical stock in bins, and transit dispatches lagged behind ERP records by 6 to 12 hours.",
+        "Ghost Inventory & The 'Phantom Stockout' Loop: Central planning operated on stale inventory snapshots. If POS sync failed or delayed, the central ERP assumed stock was still on shelves, halting replenishments and triggering severe stockouts. Conversely, if a stockout occurred mid-day, the legacy moving-average model logged zero sales, misinterpreted it as lack of customer interest, and permanently suppressed future replenishment.",
+      ],
+    },
+    {
+      type: "p",
+      text: "As PM, I owned the product vision and delivery across two critical tracks: (1) Designing the Data Reconciliation Bridges & Ingestion Pipelines to harmonize asynchronous POS and WMS events into a validated, near-real-time single source of truth; and (2) Architecting the Demand Forecasting & Replenishment Logic Engine that translated segmented demand signals (ABC/Velocity matrices, ROS, DOH) into automated internal transfer orders within Odoo ERP.",
+    },
+    { type: "h2", text: "2. The Foundation: Data Reconciliation Bridges" },
+    {
+      type: "p",
+      text: "Because the legacy POS and WMS could not talk directly or in real time to the central database, I scoped and drove the engineering of two critical data reconciliation bridges:",
+    },
+    {
+      type: "pre",
+      text: ` ┌───────────────────────┐                    ┌─────────────────────────┐
+ │   Legacy Store POS    │                    │     DC Warehouse WMS    │
+ │ (On-premise / Offline)│                    │ (On-premise / Disconnect│
+ └──────────┬────────────┘                    └────────────┬────────────┘
+            │ Batch EOD / 30-min                         │ Milestone Batches
+            │ Encrypted CSV/JSON Drops                   │ (Wave, Dispatch, ASN)
+            ▼                                            ▼
+ ┌──────────────────────────────────────────────────────────────────────┐
+ │                DATA RECONCILIATION & VALIDATION BRIDGE               │
+ │                                                                      │
+ │  1. Polling & SFTP Ingestion Engine (Change-Data-Capture / Batches)  │
+ │  2. State Reconciliation & Deduplication Worker:                     │
+ │     • Reconciles POS Receipts vs. Payment Gateway Settlement Logs    │
+ │     • Resolves WMS Pick/Pack Delays vs. DC Gate Outward Passes       │
+ │  3. Ghost Inventory Sanitizer:                                       │
+ │     • Recomputes Virtual "Effective Stock" per Store                 │
+ │     • Adjusts for in-transit delta, un-synced POS sales, & returns   │
+ └──────────────────────────────────┬───────────────────────────────────┘
+                                    │ Clean, Validated Inventory
+                                    ▼ & Demand Tables
+                 ┌─────────────────────────────────────┐
+                 │  Central Data Warehouse (BigQuery)  │
+                 │   & Central ERP (Odoo Database)     │
+                 └─────────────────────────────────────┘`,
+    },
+    { type: "h3", text: "The PM Architectural Interventions" },
+    {
+      type: "ul",
+      items: [
+        "POS-to-DB Delta Sync & Micro-Batching: Replaced once-a-day bulk FTP dumps with an automated 30-minute lightweight change-data-capture (CDC) agent running locally on store POS terminals. The agent polled local SQLite/DB tables and pushed compressed delta batches to our ingestion API whenever network connectivity was active.",
+        "Dual-Audit Reconciliation Engine: Built an automated reconciliation script bridging POS line-item dumps against UPI/credit card payment gateway settlement logs and cash drop reports. If POS offline sync stalled, the engine estimated store velocity from payment gateway ping volumes to prevent 'ghost stock' false positives.",
+        "WMS Milestone Handshake: Designed an intermediate webhook/API staging layer. The DC WMS pushed milestone events: Wave_Created, Picking_Completed, Dispatched_ASN, and Gate_Pass_Issued. This eliminated the 12-hour blind spot where inventory had physically left the DC rack but wasn't yet acknowledged as 'In-Transit' by Odoo, preventing the engine from double-ordering identical stock.",
+      ],
+    },
+    { type: "h3", text: "Effective Stock Ledger Formula" },
+    {
+      type: "p",
+      text: "Created an operational inventory state formula calculated prior to running any replenishment cycle:",
+    },
+    {
+      type: "pre",
+      text: "Effective Stock = (Physical Store On-Hand - Un-synced POS Sales) + (In-Transit Dispatched DC Stock) - (Approved Customer Returns / Damaged Write-offs)",
+    },
+    { type: "h2", text: "3. Inventory Segmentation & Replenishment Parameter Logic" },
+    {
+      type: "p",
+      text: "Fresh retail cannot apply a blanket replenishment policy. Leafy vegetables spoil within 24–48 hours, while packaged staples have a 6-month shelf life. I instituted an ABC & Velocity Segmentation Matrix:",
+    },
+    { type: "h3", text: "A. The ABC & Velocity Classification Matrix" },
+    {
+      type: "ul",
+      items: [
+        "Class A – High Velocity (Perishables / Top Produce): Tomatoes, onions, potatoes, milk, leafy greens. High volume, high perishability, zero margin for stockouts. Review frequency: Daily replenishment, tight DOH limits, and dynamic safety stocks based on day-of-week demand variance.",
+        "Class B – Medium Velocity (Dairy, Fresh Bakery, Chilled Goods): Paneer, curd, bread, packaged deli. 3 to 7-day shelf life. Review frequency: Every 48 hours with strict shelf-life capping to prevent write-offs.",
+        "Class C – Low Velocity / High Tail (Spices, Sauces, Staples, Non-Perishables): Ghee, olive oil, spices, specialty snacks. Long shelf-life, sporadic/intermittent demand. Review frequency: Weekly replenishment governed strictly by Min-Max thresholds and case-pack constraints rather than complex ML time-series.",
+      ],
+    },
+    { type: "h3", text: "B. Core Operational Levers Defined (Formulas & Rules)" },
+    {
+      type: "p",
+      text: "Rate of Sale (ROS) — Unit velocity per active store day:",
+    },
+    {
+      type: "pre",
+      text: "ROS = (Total Units Sold over Window N) / (Active In-Stock Operating Days)",
+    },
+    {
+      type: "p",
+      text: "I enforced that the denominator strictly excluded stockout hours/days to prevent downward rate bias caused by historical stockouts.",
+    },
+    {
+      type: "p",
+      text: "Days on Hand (DOH) — Current buffer depth:",
+    },
+    {
+      type: "pre",
+      text: "DOH = Effective Stock / ROS\nTarget DOH: Class A Produce = 1.2 to 1.5 Days | Class B = 3 to 4 Days | Class C = 12 to 15 Days",
+    },
+    {
+      type: "p",
+      text: "Dynamic Safety Stock (SS) — Moving away from static buffer quantities to a statistically grounded buffer:",
+    },
+    {
+      type: "pre",
+      text: "SS = Z × sqrt(L × σ_D² + ROS² × σ_L²)",
+    },
+    {
+      type: "ul",
+      items: [
+        "Z = Service level factor (1.96 for Class A items targeting 97.5% availability; 1.44 for Class C items targeting 87.5%).",
+        "L = Replenishment lead time (DC dispatch cutoff to store shelf staging).",
+        "σ_D = Standard deviation of daily store demand (derived from the ML forecast residual).",
+        "σ_L = Variance in WMS packing and logistics trip delivery time.",
+      ],
+    },
+    { type: "h2", text: "4. End-to-End System Integration Flow" },
+    {
+      type: "pre",
+      text: `  [Reconciled Data Layer] (Cleaned POS Sales + Physical WMS Stock Milestones)
+             │
+             ▼
+  [ML Demand Engine (LightGBM)] 
+             │  ↳ Generates SKU × Store 3-day gross forecast
+             │  ↳ Uncensored demand correction on zero-sales days
+             ▼
+  [Replenishment Logic Service]
+             │  ↳ Evaluates ABC Tier, ROS, and current DOH vs. Target DOH
+             │  ↳ Calculates Dynamic Safety Stock (SS)
+             │  ↳ Computes: Net Need = Max(0, [Forecast + SS] - [On-Hand + In-Transit])
+             │  ↳ Clamping: Case pack inner-units + Store shelf facing limits
+             ▼
+  [Odoo ERP System]
+             │  ↳ API Trigger (Daily 04:00 AM)
+             │  ↳ Creates: Internal Transfer Orders (Stock Picking: DC/Stock ➔ Store/Stock)
+             │  ↳ Surfaces high-variance alerts on Exception Dashboard
+             ▼
+  [WMS Execution]
+             │  ↳ Pulls validated Transfer Orders from Odoo
+             │  ↳ Generates picking waves & crate packing for store routes
+             ▼
+  [Store Delivery & Barcode Scan]
+             ↳ GRN logged in Odoo ➔ Ledger reconciles ➔ Complete closed loop`,
+    },
+    { type: "h2", text: "5. Proving the 15% Improvement: Mathematical Validation" },
+    { type: "h3", text: "A. The Evaluation Metric: WMAPE" },
+    {
+      type: "p",
+      text: "Standard MAPE fails in retail because a store frequently sells 0 units of a specific SKU on a given day (causing division by zero errors) and over-indexes on slow-moving tail SKUs. We selected Weighted Mean Absolute Percentage Error (WMAPE):",
+    },
+    {
+      type: "pre",
+      text: "WMAPE = (Σ |Actual_i - Forecast_i|) / (Σ Actual_i) × 100%",
+    },
+    { type: "h3", text: "B. The Mathematical Proof" },
+    {
+      type: "ul",
+      items: [
+        "Validation Setup: 8-week out-of-time backtest across top 500 SKUs covering ~80% of aggregate store GMV across 50 pilot stores.",
+        "Baseline (Legacy Heuristic): A 7-day rolling moving average calculated on raw POS sales data yielded an average WMAPE of 33.4% (compounded by un-reconciled POS data dropping syncs).",
+        "New Pipeline (Reconciled Data + LightGBM Engine): The ML engine (factoring in promotional calendars, corrected stockout censoring, and reconciled stock buffers) brought error down to 28.3% WMAPE.",
+        "Relative Improvement: (33.4% - 28.3%) / 33.4% = 15.3% relative reduction in forecast error.",
+      ],
+    },
+    { type: "h2", text: "6. PM Execution & Operational Problem-Solving" },
+    {
+      type: "ul",
+      items: [
+        "The Problem of Store Over-Ordering: Before this system, store managers manually requested inflated quantities because they anticipated that the DC would cut their orders by 30% due to warehouse stock shortages. PM Solution: Shifted ordering ownership away from store managers to an automated push model governed by DOH thresholds. Built a store-facing view showing incoming ASN tracking and guaranteed delivery allocations, ending the artificial order-inflation cycle.",
+        "Managing Intermittent Demand for Class C Items: Complex ML models tended to over-predict sporadic purchases of slow-moving items (e.g., imported gourmet sauces), ballooning store backroom inventory. PM Solution: Built a dual-engine router. Class A and B items were handled via the multi-variate LightGBM model; Class C items bypassed the ML engine and were governed by a deterministic, dynamic (s, S) Min-Max inventory replenishment policy.",
+      ],
+    },
+    { type: "h2", text: "7. Business Impact & Measurable Outcomes" },
+    {
+      type: "ul",
+      items: [
+        "15.3% Relative Improvement in Forecast Accuracy: Cut replenishment WMAPE from 33.4% to 28.3% across the network.",
+        "22% Reduction in Out-of-Stock (OOS) Incidents: High-velocity Class A fresh produce availability jumped from 85.8% to 88.9%, unlocking immediate same-store sales growth.",
+        "18% Reduction in Perishable Shrink / Spoilage: Aligning daily transfer orders to true POS Rate-of-Sale (ROS) prevented over-stuffing store shelves, reducing fresh produce dump and wastage.",
+        "Reconciliation Integrity: Reduced POS-to-ERP data discrepancy rates from ~8.5% of daily transactions to < 0.4%, creating a clean, auditable inventory ledger.",
+      ],
+    },
+  ],
+};
+
 export const workCaseStudies: CaseStudy[] = [
   cleverTapCaseStudy,
+  demandForecastingCaseStudy,
   {
     slug: "promo-manager",
     title: "Building a Promo Manager at Scale (0→1)",
