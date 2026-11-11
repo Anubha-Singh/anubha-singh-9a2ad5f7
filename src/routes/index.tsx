@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Page } from "@/components/SiteChrome";
 import { SlideDeckViewer } from "@/components/SlideDeckViewer";
@@ -375,93 +376,94 @@ function Index() {
             Core platform capabilities, checkout guardrails, and customer systems delivered at KPN Fresh, IBO and Quleep.
           </p>
 
-          {/* Interactive Slide Deck Viewer */}
-          <div id="deck-viewer" className="mt-8 scroll-mt-20">
-            <SlideDeckViewer />
-          </div>
-
-          <div className="mt-12 grid gap-4">
+          <div className="mt-10 grid gap-4">
             {workCaseStudies.map((c) => (
-              <div
-                key={c.slug}
-                className="group relative grid gap-6 rounded border border-border bg-card px-6 py-8 transition-colors hover:bg-secondary sm:grid-cols-[1fr_auto] sm:items-end"
-              >
-                <div>
-                  <div className="flex flex-wrap items-center gap-3">
-                    <p className="eyebrow">
-                      {c.org} · {c.role}
-                    </p>
-                    {(c.slug === "pos-gap-analysis" || c.slug === "loyalty-program") ? (
-                      <span className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
-                        Slide Deck Included
-                      </span>
-                    ) : c.link ? (
-                      <a
-                        href={c.link.href}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
-                      >
-                        Live App ↗
-                      </a>
-                    ) : null}
+              <Fragment key={c.slug}>
+                {c.slug === "arnxt" && (
+                  <div id="deck-viewer" className="my-6 scroll-mt-20">
+                    <SlideDeckViewer />
                   </div>
-                  <h3 className="mt-2 text-2xl text-ink">
-                    <Link
-                      to="/work/$slug"
-                      params={{ slug: c.slug }}
-                      className="transition-colors hover:text-primary focus:outline-none"
-                    >
-                      {c.title}
-                    </Link>
-                  </h3>
-                  <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground">
-                    {c.summary}
-                  </p>
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {c.tags.map((t) => (
-                      <span
-                        key={t}
-                        className="rounded-full border border-border px-3 py-1 text-xs text-muted-foreground"
-                      >
-                        {t}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                <div className="flex flex-col gap-3 sm:items-end sm:text-right">
+                )}
+                <div
+                  className="group relative grid gap-6 rounded border border-border bg-card px-6 py-8 transition-colors hover:bg-secondary sm:grid-cols-[1fr_auto] sm:items-end"
+                >
                   <div>
-                    <p className="font-display text-3xl text-primary">{c.metrics[0]?.value}</p>
-                    <p className="text-xs text-muted-foreground">{c.metrics[0]?.label}</p>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <p className="eyebrow">
+                        {c.org} · {c.role}
+                      </p>
+                      {(c.slug === "pos-gap-analysis" || c.slug === "loyalty-program") ? (
+                        <span className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
+                          Slide Deck Included
+                        </span>
+                      ) : c.link ? (
+                        <a
+                          href={c.link.href}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
+                        >
+                          Live App ↗
+                        </a>
+                      ) : null}
+                    </div>
+                    <h3 className="mt-2 text-2xl text-ink">
+                      <Link
+                        to="/work/$slug"
+                        params={{ slug: c.slug }}
+                        className="transition-colors hover:text-primary focus:outline-none"
+                      >
+                        {c.title}
+                      </Link>
+                    </h3>
+                    <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground">
+                      {c.summary}
+                    </p>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {c.tags.map((t) => (
+                        <span
+                          key={t}
+                          className="rounded-full border border-border px-3 py-1 text-xs text-muted-foreground"
+                        >
+                          {t}
+                        </span>
+                      ))}
+                    </div>
                   </div>
-                  <div className="flex flex-wrap items-center gap-3 pt-2">
-                    {(c.slug === "pos-gap-analysis" || c.slug === "loyalty-program") ? (
-                      <a
-                        href="#deck-viewer"
-                        className="text-xs font-semibold text-primary underline underline-offset-4 transition-colors hover:text-primary/80"
+                  <div className="flex flex-col gap-3 sm:items-end sm:text-right">
+                    <div>
+                      <p className="font-display text-3xl text-primary">{c.metrics[0]?.value}</p>
+                      <p className="text-xs text-muted-foreground">{c.metrics[0]?.label}</p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-3 pt-2">
+                      {(c.slug === "pos-gap-analysis" || c.slug === "loyalty-program") ? (
+                        <a
+                          href="#deck-viewer"
+                          className="text-xs font-semibold text-primary underline underline-offset-4 transition-colors hover:text-primary/80"
+                        >
+                          View in slide player ↓
+                        </a>
+                      ) : c.link ? (
+                        <a
+                          href={c.link.href}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-xs font-semibold text-primary underline underline-offset-4 transition-colors hover:text-primary/80"
+                        >
+                          {c.link.label} ↗
+                        </a>
+                      ) : null}
+                      <Link
+                        to="/work/$slug"
+                        params={{ slug: c.slug }}
+                        className="text-xs font-medium text-muted-foreground transition-colors hover:text-ink"
                       >
-                        View in slide player ↑
-                      </a>
-                    ) : c.link ? (
-                      <a
-                        href={c.link.href}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-xs font-semibold text-primary underline underline-offset-4 transition-colors hover:text-primary/80"
-                      >
-                        {c.link.label} ↗
-                      </a>
-                    ) : null}
-                    <Link
-                      to="/work/$slug"
-                      params={{ slug: c.slug }}
-                      className="text-xs font-medium text-muted-foreground transition-colors hover:text-ink"
-                    >
-                      Case study →
-                    </Link>
+                        Case study →
+                      </Link>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </Fragment>
             ))}
           </div>
         </section>
