@@ -81,7 +81,99 @@ export const mockTestMakerCaseStudy: CaseStudy = {
     ],
   };
 
+export const cleverTapCaseStudy: CaseStudy = {
+  slug: "clevertap-reconciliation",
+  title: "CleverTap User Profile & Event Reconciliation via BigQuery",
+  shortTitle: "CleverTap Reconciliation",
+  org: "KPN Fresh",
+  role: "Product Owner",
+  period: "Data Pipelines & Lifecycle Integrity",
+  summary:
+    "Led end-to-end data reconciliation between production transactional databases and CleverTap via BigQuery SQL—resolving a 15–20% profile discrepancy, backfilling 2M+ orphaned user records, and deploying automated daily guardrails to secure retention marketing ROI.",
+  metrics: [
+    { value: "2M+", label: "Orphaned profiles reconciled" },
+    { value: "15–20%", label: "Missing data gap resolved" },
+    { value: "Double digit", label: "Campaign conversion rebound" },
+    { value: "<1%", label: "Automated daily alert delta" },
+  ],
+  tags: ["BigQuery", "SQL", "CleverTap", "Lifecycle Marketing", "Data Integrity", "Growth Systems"],
+  blocks: [
+    { type: "h2", text: "Context & Situation" },
+    {
+      type: "p",
+      text: "At KPN Fresh, we relied heavily on CleverTap to trigger lifecycle campaigns, behavioral nudges, and retention flows based on user events such as add-to-cart, checkout drop-offs, and order completions. High-converting lifecycle automation depended strictly on real-time event parity and accurate user-level state.",
+    },
+    { type: "h2", text: "The Discrepancy Spotted" },
+    {
+      type: "p",
+      text: "During a routine weekly campaign review, I noticed a significant drop in conversion and engagement metrics on segmented push notifications. When I dug deeper into CleverTap's user profile counts versus our actual active transactional users in the production database, the numbers did not add up:",
+    },
+    {
+      type: "ul",
+      items: [
+        "15–20% missing properties: Nearly 15–20% of users who placed orders were either missing critical custom user properties (like last_order_date, total_orders_placed, and lifetime_value) or had duplicated profiles due to fragmented identifiers (phone number vs. device ID/guest tokens).",
+        "Silent sync dropouts: Several real-time event sync failures had silently caused active users to fall out of targeted lifecycle funnels, leading to suppressed messages or inaccurate messaging cadence.",
+      ],
+    },
+    { type: "h2", text: "Action Taken: Root Cause Analysis & Extraction" },
+    {
+      type: "p",
+      text: "Rather than waiting on an overloaded core data engineering sprint, I took ownership of fixing the pipeline and reconciling the profiles. I queried our raw events and transactional tables in Google BigQuery to map the ground truth:",
+    },
+    {
+      type: "ul",
+      items: [
+        "Wrote SQL scripts joining order logs, user auth records, and event streaming logs.",
+        "Isolated users where the CleverTap sync timestamp lagged behind the actual order completion timestamp or where properties were null.",
+        "Pinpointed specific webhook drops and payload serialization bugs in the real-time event forwarding service.",
+      ],
+    },
+    { type: "h2", text: "Transforming & Scripting the Payload" },
+    {
+      type: "p",
+      text: "Using BigQuery SQL, I unified the primary keys and transformed the data into normalized payloads:",
+    },
+    {
+      type: "ul",
+      items: [
+        "Identity unification: Mapped guest tokens and device IDs back to verified phone numbers and canonical user IDs.",
+        "Aggregated metrics: Computed accurate aggregated attributes including lifetime value (LTV), verified total order counts, and RFM segment tags.",
+        "Schema alignment: Formatted the output into CleverTap-compatible profile schemas ready for ingestion.",
+      ],
+    },
+    { type: "h2", text: "Manual Batch Reconciliation & Backfill" },
+    {
+      type: "p",
+      text: "To restore data integrity immediately without waiting for a re-architecture, I exported the validated dataset and executed scheduled manual CSV batch uploads via CleverTap’s profile upload interface and API endpoints. I systematically verified that the backfill successfully merged orphaned profiles and restored accurate metadata across all lifecycle funnels.",
+    },
+    { type: "h2", text: "Permanent Automated Guardrails" },
+    {
+      type: "p",
+      text: "To safeguard data pipelines moving forward, I established continuous automated monitoring:",
+    },
+    {
+      type: "ul",
+      items: [
+        "Automated reconciliation script: Wrote an automated BigQuery query running on a daily schedule to compare production transactional orders against CleverTap event captures.",
+        "Threshold alerting: Flagged any delta greater than 1% between production orders and CleverTap event captures.",
+        "Proactive intervention: Alerted analytics and growth teams instantly before automated campaigns fired, preventing broken campaigns from reaching users.",
+      ],
+    },
+    { type: "h2", text: "Results & Impact" },
+    {
+      type: "ul",
+      items: [
+        "Reconciled over 2 million orphaned user profiles, restoring accurate targeting across all retention journeys.",
+        "Double-digit rebound in automated campaign open and conversion rates, directly boosting retention revenue.",
+        "Eliminated wasted marketing spend and stopped conflicting notifications from being sent to active buyers.",
+        "Established lasting cross-functional trust between engineering, data analytics, and marketing teams.",
+      ],
+    },
+  ],
+};
+
 export const workCaseStudies: CaseStudy[] = [
+  cleverTapCaseStudy,
   {
     slug: "promo-manager",
     title: "Building a Promo Manager at Scale (0→1)",
