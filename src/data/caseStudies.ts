@@ -385,9 +385,346 @@ export const demandForecastingCaseStudy: CaseStudy = {
   ],
 };
 
+export const lastMileEtaCaseStudy: CaseStudy = {
+  slug: "last-mile-eta-engine",
+  title: "Last-Mile Fulfillment, Order Tracking & Real-Time ETA Engine",
+  shortTitle: "Last-Mile Tracking & ETA Engine",
+  org: "KPN Fresh",
+  role: "Product Manager — Mobile App & Store Control Tower",
+  period: "Flagship B2C Mobile App & Dark Store Logistics",
+  summary:
+    "Architected a real-time order tracking and predictive ETA engine for KPN Fresh's micro-fulfillment dark stores—introducing a 'Friction-by-Design' Chevron UX that slashed Google Maps API costs by >85%, decoupling warehouse packed ETA from last-mile transit ML models (LightGBM), reducing WISMO customer support tickets by >70%, and cutting delivery delay rates from 40% to <15%.",
+  metrics: [
+    { value: ">70%", label: "WISMO support calls deflected" },
+    { value: "40% → <15%", label: "Fulfillment delay rate drop" },
+    { value: ">85%", label: "Google Maps API cost saved" },
+    { value: "+22%", label: "30-Day customer retention increase" },
+  ],
+  tags: [
+    "Last-Mile Delivery",
+    "ETA Engine",
+    "LightGBM",
+    "Friction-by-Design",
+    "Dark Store Logistics",
+    "Unit Economics",
+    "System Architecture",
+  ],
+  blocks: [
+    { type: "h2", text: "1. Executive Summary & Problem Discovery" },
+    { type: "h3", text: "Context & Operational Reality" },
+    {
+      type: "p",
+      text: "KPN Fresh operates a high-velocity, micro-fulfillment dark store model designed to deliver fresh produce and grocery essentials on-demand. Despite rapid catalog growth, customer retention was heavily bottlenecked by post-purchase operational opacity.",
+    },
+    {
+      type: "pre",
+      text: `+------------------+      +-------------------+      +--------------------+
+|  Order Placed    | ---> |  Blackout Window  | ---> |  Order Delivered   |
+| (SMS #1 Received)|      | (Zero Visibility) |      | (SMS #2 Received)  |
++------------------+      +-------------------+      +--------------------+`,
+    },
+    { type: "h3", text: "The Tracking Blackout" },
+    {
+      type: "p",
+      text: "Prior to this initiative, order lifecycle communication relied entirely on two asynchronous, static transactional SMS messages: 'Order Placed' and 'Order Delivered'. The mobile application lacked a dynamic order status interface, real-time map rendering, or automated status updates.",
+    },
+    { type: "h3", text: "Voice of Customer (VoC) & Play Store Diagnostic" },
+    {
+      type: "p",
+      text: "An audit of Play Store reviews and Customer Care (CC) support logs revealed that Where Is My Order (WISMO) inquiries constituted the single largest source of customer friction:",
+    },
+    {
+      type: "ul",
+      items: [
+        "Primary Dissatisfaction Driver: WISMO queries accounted for over 68% of total inbound customer support volume.",
+        "Core User Persona Intent: In-depth customer interviews indicated that users relied on the app primarily for time-sensitive convenience (e.g., immediate meal preparation). When physical store visits were inconvenient, any operational opacity generated significant anxiety.",
+        "The 40% Delay Problem: 40% of total fulfilled orders suffered severe delays, taking between 2 to 3+ hours to reach destinations situated within a tight 2 to 3 km radius from the micro-fulfillment hub.",
+      ],
+    },
+    { type: "h3", text: "Business Consequences & Economics" },
+    {
+      type: "ul",
+      items: [
+        "Escalating Churn: Customer lifetime value (LTV) dropped due to low 30-day retention among first-time buyers experiencing silent delays.",
+        "Financial Losses: Order cancellations surged by 18% mid-fulfillment, leading to inventory write-offs on perishable produce and mounting refund claims that eroded gross margins.",
+        "Support Overhead: Escalating Customer Care Turnaround Time (TAT) dramatically increased per-ticket support resolution costs.",
+        "Market Benchmarking: Quick-commerce benchmarks (Swiggy Instamart, Zepto) conditioned consumers to expect immediate visual confirmation, granular lifecycle stage updates, and precise arrival countdowns without contacting support agents.",
+      ],
+    },
+    { type: "h2", text: "2. Product Strategy & UX Architecture: 'Friction-by-Design' for Cost Optimization" },
+    { type: "h3", text: "The Google Maps API Cost Blocker" },
+    {
+      type: "p",
+      text: "While replicating a continuous live-map tracking screen was initially considered, engineering and financial evaluations highlighted a major unit economics challenge: continuous client-side polling and map re-rendering quickly consumed significant API call volumes. At high daily order concurrency, maintaining active Google Maps sessions drained per-order contribution margins. Alternative providers (OpenStreetMap, OLA Maps) suffered high render latency, inconsistent local geofencing, and poor road routing in dense micro-neighborhoods.",
+    },
+    {
+      type: "pre",
+      text: `+----------------------------------------------------------------------------------+
+|                              MAP COST BREAKDOWN                                  |
+| Continuous Polling  -->  Google Maps JavaScript / Directions SDK  --> High Costs |
+| Dynamic Polylines   -->  Distance Matrix & Geocoding APIs         --> Margin Loss|
++----------------------------------------------------------------------------------+`,
+    },
+    { type: "h3", text: "Behavioral Discovery: Time Intent vs. Map Intent" },
+    {
+      type: "p",
+      text: "Through session recordings and tracking telemetry, we analyzed post-purchase behavior and discovered a critical split in user intent:",
+    },
+    {
+      type: "pre",
+      text: `                                  USER INTENT DISTRIBUTION   
+   +------------------------------------------------------------------------------------+   
+   | [=========================================>] 82% Time-Intent (ETA Countdown Only)   |   
+   | [=======>] 18% Map-Intent (Route Inspection & Rider Tracking)                      |   
+   +------------------------------------------------------------------------------------+`,
+    },
+    {
+      type: "ul",
+      items: [
+        "82% of Tracking Sessions were Time-Intent Only: Customers primarily opened the app to answer one question: 'When will my groceries arrive?'",
+        "18% of Sessions were Map-Intent: Users only expanded or inspected a map when an order was severely overdue, when a rider remained stationary for extended periods, or when direct calls to the rider went unanswered.",
+      ],
+    },
+    { type: "h3", text: "The Chevron UI Architecture" },
+    {
+      type: "p",
+      text: "To optimize operational costs without sacrificing user experience, we designed a 'Friction-by-Design' Chevron UI bottom drawer:",
+    },
+    {
+      type: "pre",
+      text: `+----------------------------------------------------------------------------------+
+|                                CHEVRON UI SCREEN                                 |
++----------------------------------------------------------------------------------+
+|                                                                                  |
+|                        [ Map View Hidden by Default ]                            |
+|                     (Zero Google Maps API Consumption)                           |
+|                                                                                  |
++----------------------------------------------------------------------------------+
+| ^  ARRIVING IN 14 MINS                                                           |
+| -- Order Packed -------o------------------------ Dispatched                      |
+| [Pull Up for Live Route Map]                                                     |
++----------------------------------------------------------------------------------+`,
+    },
+    {
+      type: "ul",
+      items: [
+        "Default Collapsed State: Displays a lightweight dynamic progress bar alongside a real-time predictive ETA countdown. Zero Google Maps SDK instances or directions endpoints are initialized in this state, incurring $0 in mapping API costs.",
+        "Explicit Opt-in Expansion: The interactive Google Map canvas renders dynamically only when a user explicitly taps or drags the Chevron drawer upward to view live route polylines and rider markers.",
+      ],
+    },
+    { type: "h3", text: "Post-Order Sticky ETA Home Widget" },
+    {
+      type: "p",
+      text: "To further deflect unnecessary navigation to the dedicated order tracking screen, we introduced an active persistent Sticky ETA Widget on the application home screen:",
+    },
+    {
+      type: "pre",
+      text: `+----------------------------------------------------------------------------------+
+|                              HOME SCREEN TOP BAR                                 |
++----------------------------------------------------------------------------------+
+| +------------------------------------------------------------------------------+ |
+| |  LIVE ORDER: Packing Fresh Produce  |  Arriving in 16 Mins           [View]  | |
+| +------------------------------------------------------------------------------+ |
+|                                                                                  |
+|  [ Banner Carousel ]             [ Category Grid ]          [ Express Offers ]   |
++----------------------------------------------------------------------------------+`,
+    },
+    {
+      type: "p",
+      text: "When an active order is in flight, launching the app immediately surfaces the live arrival countdown and current processing status directly within the top header. This persistent status bar resolved immediate customer inquiry on launch, preventing over 60% of users from ever opening the primary tracking screen or triggering mapping API calls.",
+    },
+    { type: "h2", text: "3. Product Specification (PRD), State Machine & Systems Architecture" },
+    { type: "h3", text: "Functional Requirements & Lifecycle State Machine" },
+    {
+      type: "pre",
+      text: `+---------------+      +---------------+      +---------------+      +---------------+
+|  ORDER PLACED | ---> |  ORDER PACKED | ---> |  ON THE WAY   | ---> |   DELIVERED   |
++---------------+      +---------------+      +---------------+      +---------------+`,
+    },
+    {
+      type: "ul",
+      items: [
+        "Ingestion & Payment → Customer State: Order Placed | Trigger: Payment Gateway Callback | Surfaces: Sticky Widget, Order Detail, Push.",
+        "Picking & Assembly → Customer State: Order Placed (Packing) | Trigger: Dark Store Handheld Terminal | Surfaces: Sticky Widget, Order Detail.",
+        "QC & Bagging → Customer State: Order Packed | Trigger: Store Scanner Verification | Surfaces: Sticky Widget, Order Detail, Push.",
+        "Rider Handover → Customer State: On the Way | Trigger: Rider App QR Scan | Surfaces: Sticky Widget, Order Detail (Map Opt-in).",
+        "Geo-Fenced Arrival → Customer State: On the Way (Near Doorstep) | Trigger: Rider GPS (<50m radius) | Surfaces: Sticky Widget, Proactive Push.",
+        "POD Sign-off → Customer State: Delivered | Trigger: Customer OTP / Rider Confirmation | Surfaces: Home Screen Reset, Push Notification.",
+      ],
+    },
+    { type: "h3", text: "Decoupled Operational ETA Architecture" },
+    {
+      type: "p",
+      text: "Predicting delivery arrival times using a single end-to-end Machine Learning model often produces unreliable results because warehouse processing times and street transit are governed by entirely different external variables:",
+    },
+    {
+      type: "pre",
+      text: `                        DECOUPLED ETA CALCULATION PIPELINE                         
++----------------------------------+      +----------------------------------+ 
+|        IN-STORE PACKED ETA       |      |       TRANSIT LAST-MILE ETA      | 
+|  * Active dark store queue volume|      |  * Historical road segment speeds| 
+|  * Item SKU count & total weight |  +   |  * Live rider dispatch latency   | 
+|  * Real-time picker speed matrix |      |  * Micro-weather & traffic delays| 
++----------------------------------+      +----------------------------------+ 
+                                   |                                    
+                                   v 
++----------------------------------------------------------------------------+ 
+|                       TOTAL DYNAMIC PREDICTED ETA                          | 
++----------------------------------------------------------------------------+`,
+    },
+    {
+      type: "ul",
+      items: [
+        "In-Store / Packed ETA Model: Predicts warehouse queue times, picking duration, and Quality Check (QC) verification speed based on real-time store order volume, SKU complexity, and active picker availability.",
+        "Transit / Last-Mile ETA Model: Predicts rider allocation delay, travel time, and doorstep handoff duration using road routing distances, rider historical speed profiles, and hyper-local traffic conditions.",
+      ],
+    },
+    { type: "h3", text: "Non-Functional Requirements (NFRs) & System Resilience" },
+    {
+      type: "pre",
+      text: `                                SYSTEM TIMEOUT & FALLBACK                                  
+Client App Request ---> [ ML Inference Engine ] --- Timeout >500ms ---> [ Deterministic Fallback ]
+                                                                               |                  
+UI Renders Seamlessly <--------------------------------------------------------+`,
+    },
+    {
+      type: "ul",
+      items: [
+        "Inference Latency SLA: P95 API response times maintained strictly under 150ms for ETA inference payloads to keep the mobile interface instantaneous and responsive.",
+        "Graceful Degradation Logic: If the machine learning inference microservice takes longer than 500ms, the system silently falls back to a deterministic, matrix-based lookup table driven by item volume and direct route distance heuristics, ensuring the UI never freezes or throws error states.",
+        "Webhook Resilience & Rate-Limiting: Deployed a high-throughput Redis/PubSub queue with exponential backoff and rate-limiting safeguards to ingest high volumes of rider assignment events without dropping messages during peak demand spikes.",
+      ],
+    },
+    { type: "h2", text: "4. Operational Bottlenecks, Data Engineering & Feature Scoping" },
+    { type: "h3", text: "Operational Reality & Initial Data Gaps" },
+    {
+      type: "p",
+      text: "On-ground audits of dark store operations revealed several critical data logging gaps that initially limited predictive modeling:",
+    },
+    {
+      type: "ul",
+      items: [
+        "Bundled Timestamping: Picking, QC verification, and bagging activities were initially grouped under a single scan event, obscuring granular operational bottlenecks.",
+        "Unindexed Logs: Rider reassignments and order rejections were stored in unstructured log files without indexed database records.",
+        "Missing Contextual Data: Legacy systems did not record external factors such as local weather, road construction, or regional holiday trading spikes.",
+      ],
+    },
+    { type: "h3", text: "Feature Parameter Matrix Reduction (108 → 65 Variables)" },
+    {
+      type: "p",
+      text: "We identified 108 operational and environmental variables across dark store operations, competitor benchmarks, and delivery logs. Working closely with engineering teams, we prioritized these signals down to a high-performing production set of 65 features:",
+    },
+    {
+      type: "pre",
+      text: `+-----------------------------------------------------------------------------------+
+|                        108 CANDIDATE FEATURE VARIABLES                            |
++-----------------------------------------------------------------------------------+
+                                         |                                         
+                                         v  [ Filtered by Signal & Data Feasibility ]
++-----------------------------------------------------------------------------------+
+|                           65 PRODUCTION FEATURE SET                               |
+|                                                                                   |
+|  * Store Congestion    * SKU Diversity    * Temporal Signals   * Rider Profiles   |
+|  * Active Batch Count  * Weight Matrix    * Regional Calendars * Routing Telemetry|
++-----------------------------------------------------------------------------------+`,
+    },
+    { type: "h3", text: "Hands-On Data Engineering Pipeline" },
+    {
+      type: "p",
+      text: "To accelerate deployment without waiting for a dedicated data science pod, the product team directly led end-to-end data preparation and model prototyping:",
+    },
+    {
+      type: "pre",
+      text: `+------------------+      +-------------------+      +--------------------+
+| BigQuery SQL     | ---> | Kaggle Prototype  | ---> | LightGBM Model     |
+| Data Pipelines   |      | Notebook Pipelines|      | Hyperparameter Tune|
++------------------+      +-------------------+      +--------------------+`,
+    },
+    {
+      type: "ul",
+      items: [
+        "SQL Pipeline Development: Authored multi-table BigQuery extraction scripts merging historical records across warehouse management, order processing, and rider dispatch systems, enriched with localized calendar metadata.",
+        "Event Logging via Webhooks: Built ingestion scripts to capture rider allocation attempts, accepted deliveries, and doorstep arrivals into structured database tables.",
+        "Data Cleaning & Training Pipelines: Extracted 12 months of fulfillment logs from a high-volume pilot store. Handled missing entries, normalized operational outliers, and applied temporal cross-validation splits (70% train / 30% test).",
+        "Model Architecture Selection: Trained a LightGBM gradient-boosting regressor, selected for its ultra-fast inference speeds, low memory footprint, and strong performance on tabular operational datasets.",
+      ],
+    },
+    { type: "h2", text: "5. Deployment, Operations Control Tower & Change Management" },
+    { type: "h3", text: "Production API Contract & Service Interface" },
+    {
+      type: "p",
+      text: "We established a standardized, low-latency API contract between client applications and the predictive inference service. The interface ingests real-time order payloads (item count, total weight, perishable/chilled SKU categorizations), current dark store queue volume, active picker capacity, and customer destination coordinates, returning decoupled packed and transit estimates within strict sub-150ms latency SLAs.",
+    },
+    { type: "h3", text: "Predictive Operations Control Tower Integration" },
+    {
+      type: "p",
+      text: "We upgraded the internal Operations Control Tower from a reactive reporting dashboard into a proactive real-time management tool:",
+    },
+    {
+      type: "pre",
+      text: `+----------------------------------------------------------------------------------+
+|                        OPERATIONS CONTROL TOWER DASHBOARD                        |
++----------------------------------------------------------------------------------+
+| STORE: STR-042 (Central Hub)                  ACTIVE ORDERS IN FLIGHT: 38        |
++----------------------------------------------------------------------------------+
+| ORDER ID     | ITEMS | PACK ETA   | TRANSIT ETA | SLA STATUS | PREDICTIVE ACTION  |
++--------------+-------+------------+-------------+------------+-------------------+
+| ORD-88912    |  14   | 8 Mins     | 12 Mins     | [ ON-TIME ]| Standard Queue    |
+| ORD-88919    |   6   | 4 Mins     | 10 Mins     | [ ON-TIME ]| Standard Queue    |
+| ORD-88924    |  22   | 16 Mins    | 15 Mins     | [ AT RISK ]| Reassign Picker 2 |
+| ORD-88931    |   4   | 12 Mins    | 14 Mins     | [ BREACH ] | Expedite Packing  |
++----------------------------------------------------------------------------------+`,
+    },
+    {
+      type: "ul",
+      items: [
+        "Early SLA Breach Detection: The Control Tower continuously computes live predictions for both packed and transit stages. Orders at risk of exceeding promised delivery windows are flagged in amber or red 15 minutes before an SLA breach occurs.",
+        "Dynamic Resource Allocation: Store managers receive real-time operational alerts, prompting them to reallocate staff from restock workflows to busy packing tables during sudden demand surges.",
+      ],
+    },
+    { type: "h3", text: "Rollout Strategy & Change Management" },
+    {
+      type: "pre",
+      text: `+-------------------+      +-------------------+      +--------------------+
+| 1 Pilot Dark Store| ---> | 5 Regional Stores | ---> | Network-Wide       |
+| (Baseline Tuning) |      | (Canary Phase)    |      | Production Rollout |
++-------------------+      +-------------------+      +--------------------+`,
+    },
+    {
+      type: "ul",
+      items: [
+        "Phased Rollout: Tested initial model performance at a single high-volume pilot hub before rolling out across 5 additional micro-fulfillment stores.",
+        "On-Ground Enablement: Conducted hands-on training sessions with warehouse supervisors and picking staff, building team trust in algorithmic batch dispatch recommendations over legacy manual estimation methods.",
+      ],
+    },
+    { type: "h2", text: "6. Business Impact & Measurable Outcomes" },
+    {
+      type: "pre",
+      text: `                                  KEY IMPACT METRICS   
+   +------------------------------------------------------------------------------------+   
+   | WISMO Support Calls  | [=========================>] Reduced by >70%                |   
+   | Fulfillment Delays   | [==============>] Dropped from 40% to <15%                 |   
+   | Google Maps API Cost | [===========================>] Reduced by >85% / Session   |   
+   +------------------------------------------------------------------------------------+`,
+    },
+    {
+      type: "ul",
+      items: [
+        "Last-Mile ETA Model Accuracy: Reached 70% accuracy measured within a strict ±3-minute target tolerance window (up from non-predictive static heuristics).",
+        "Packed ETA Model Accuracy: Reached 55% accuracy within a ±2-minute tolerance window across dark store packing lines.",
+        "Customer Support (WISMO) Volume: Dropped from 68% of inbound tickets to <18% (>70% deflection), significantly lowering support operations overhead.",
+        "Order Fulfillment Delay Rate: Dropped from 40% of total orders to <15%, drastically reducing order cancellations and perishable write-offs.",
+        "Google Maps Infrastructure Cost: Slashed mapping expenses by >85% per tracking session via the Chevron 'Friction-by-Design' pattern.",
+        "30-Day Customer Retention: Boosted 30-day repeat purchase retention by +22% due to consistent post-purchase transparency and dependable ETAs.",
+      ],
+    },
+  ],
+};
+
 export const workCaseStudies: CaseStudy[] = [
   cleverTapCaseStudy,
   demandForecastingCaseStudy,
+  lastMileEtaCaseStudy,
   {
     slug: "promo-manager",
     title: "Building a Promo Manager at Scale (0→1)",
