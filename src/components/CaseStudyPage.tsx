@@ -56,6 +56,35 @@ export function CaseStudyPage({ study }: { study: CaseStudy }) {
                 </pre>
               );
             }
+            if (b.type === "table") {
+              return (
+                <div key={i} className="my-6 overflow-x-auto rounded border border-border bg-card shadow-sm">
+                  <table className="w-full border-collapse text-left text-xs sm:text-sm">
+                    <thead className="border-b border-border bg-secondary/60 font-semibold text-ink">
+                      <tr>
+                        {b.headers.map((h, hi) => (
+                          <th key={hi} className="px-4 py-3 whitespace-nowrap">{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      {b.rows.map((row, ri) => (
+                        <tr key={ri} className="transition-colors hover:bg-secondary/30">
+                          {row.map((cell, ci) => (
+                            <td
+                              key={ci}
+                              className={`px-4 py-3 leading-relaxed text-muted-foreground ${ci === 0 ? "font-medium text-ink whitespace-nowrap" : ""}`}
+                            >
+                              {cell}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              );
+            }
             return (
               <ul key={i}>
                 {b.items.map((it, j) => (

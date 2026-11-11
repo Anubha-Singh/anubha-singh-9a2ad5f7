@@ -3,7 +3,8 @@ export type Block =
   | { type: "h3"; text: string }
   | { type: "p"; text: string }
   | { type: "ul"; items: string[] }
-  | { type: "pre"; text: string };
+  | { type: "pre"; text: string }
+  | { type: "table"; headers: string[]; rows: string[][] };
 
 export type CaseStudy = {
   slug: "testmaker" | "promo-manager" | "refunds" | "arnxt" | "trustrent" | string;
@@ -698,7 +699,130 @@ UI Renders Seamlessly <--------------------------------------------------------+
   ],
 };
 
+export const omnichannelDataFoundationCaseStudy: CaseStudy = {
+  slug: "omnichannel-data-foundation",
+  title: "Omnichannel Data Foundation & Reconciliation Engine",
+  shortTitle: "Omnichannel Data Foundation",
+  org: "KPN Fresh",
+  role: "Product Manager — Base Data Foundation",
+  period: "Enterprise Data Platform · 7 Domains & CDM",
+  summary:
+    "Unifying legacy POS, WMS, and Postgres into a Single Source of Truth on BigQuery—cutting data sprint cycles by 30%, eliminating 20 hrs/month of manual reporting, and powering 7 domain Looker dashboards.",
+  metrics: [
+    { value: "30%", label: "Faster Data Sprints (2.5w → 2w)" },
+    { value: "20 Hrs/Mo", label: "Saved in Manual Reporting" },
+    { value: "12+", label: "Core Enterprise Fact Tables" },
+    { value: "15%", label: "Forecast Error Reduction" },
+  ],
+  tags: [
+    "Data Product Management",
+    "BigQuery & SQL",
+    "Looker Studio",
+    "Supply Chain & Retail",
+  ],
+  blocks: [
+    { type: "h2", text: "1. Hero Snapshot & Operational Pod" },
+    {
+      type: "p",
+      text: "As Product Manager for KPN Fresh's Base Data Foundation, I led a high-impact, lean 3-person pod (1 PM, 1 Data Engineer, 1 Data Scientist) to architect an enterprise Common Data Model (CDM) and automated reconciliation engine on Google BigQuery (kpn-prod-386813). The platform unified asynchronous data from legacy offline store POS terminals (pos1 / Blukode), application PostgreSQL databases, and Odoo ERP into a single source of truth feeding 7 domain Looker Studio dashboards.",
+    },
+    { type: "h2", text: "2. The Problem: Data Silos, Manual Reconciliation & Slow Sprint Cycles" },
+    {
+      type: "p",
+      text: "As KPN Fresh scaled across physical stores, Distribution Centers (DCs), and hyperlocal delivery, operational data was split between legacy and modern systems:",
+    },
+    {
+      type: "ul",
+      items: [
+        "System Fragmentation: Offline retail counters ran on a legacy POS (pos1) using local integer IDs (LocId, prd_id), while our mobile app and supply chain ran on Postgres and Odoo ERP (odoo_site_code, ksin).",
+        "20+ Hours Lost Monthly to Manual Reconciliation: Teams spent over 20 hours every month manually pulling CSV exports to reconcile purchase invoices, weight-adjusted online orders, and store wastage against central ledgers.",
+        "2.5-Week Sprint Bottlenecks: Every time a business team requested a new report or metric, the data pod wasted days debating definitions (e.g., what counts as an Out-of-Stock SKU? how is shrinkage calculated?), stretching data sprint cycles to 2.5 weeks.",
+      ],
+    },
+    { type: "h2", text: "3. Stakeholder Alignment: Locking in 100+ Metric Definitions Across 7 Domains" },
+    {
+      type: "p",
+      text: "To stop the endless back-and-forth between business teams and engineering, I partnered directly with domain heads across the company to define, verify, and sign off on a unified Base Data Foundation Matrix before writing pipeline specs:",
+    },
+    {
+      type: "table",
+      headers: ["Domain / Function", "Stakeholder Partnered With", "Standardized Metrics & Dashboards Released"],
+      rows: [
+        [
+          "Network Design (NSO)",
+          "Business Development",
+          "Catchment coverage %, ROIC capex ramp-up, D1/D15/D30 store footfall vs. forecast, Revenue/Sq. Ft.",
+        ],
+        [
+          "Selection & Sourcing",
+          "Category Buy Team",
+          "L4 node unit/revenue velocity, Balance Shelf Life (BSL < 30%), Net Landing Cost (NLC), Purchase Price Variance (PPV), Vendor & ARS Indent Fill Rates.",
+        ],
+        [
+          "DC & Mid-Mile Ops",
+          "SCM Team",
+          "Transfer Discrepancy (TD %) between DC dispatch and store receipt, Cycle Count mismatch %, Vehicle utilization, 5:30 AM store delivery SLA breaches.",
+        ],
+        [
+          "Store Operations",
+          "Store & Cluster Managers",
+          "DILO adherence, Cashier bill edits & daily cash reconciliation, System Waste vs. Logged Waste delta, Online pick-to-dispatch speed.",
+        ],
+        [
+          "Customer & Pricing",
+          "Category Sell Team",
+          "Pure Online vs. Pure Offline vs. Omni channel cohorts, Key Value Item (KVI) price index, Promo incremental lift, Weight-adjustment wallet credits/debits.",
+        ],
+        [
+          "Growth & App Funnel",
+          "Marketing & Online Team",
+          "Sticky new user cost (≥ 2 txns/month), OOS impressions on app, Scheduled vs. Express SLA breaches, Rider utilization & payout ratios.",
+        ],
+        [
+          "Demand Forecasting",
+          "Tech, Product & Data Science",
+          "Monthly ABC & Velocity tiering rules, Dynamic Safety Stock, Model MAPE (1w/2w/4w horizons) vs. Manual Intervention MAPE.",
+        ],
+      ],
+    },
+    { type: "h2", text: "4. Executing the Common Data Model (CDM) & Reconciliation Engine" },
+    {
+      type: "p",
+      text: "Working hands-on in our lean 3-person pod (Me + 1 Data Engineer + 1 Data Scientist), I authored the schema mappings and SQL reconciliation logic on Google BigQuery (kpn-prod-386813):",
+    },
+    {
+      type: "ul",
+      items: [
+        "1. Master ID Crosswalk (MDM): Built the mapping bridge connecting legacy POS location (LocId) and product IDs (prd_id) to modern ERP codes (odoo_site_code and ksin), ensuring zero orphaned transactions across online and offline channels.",
+        "2. Automated Invoice & Purchase Cost Reconciliation: Defined composite join logic across legacy purchase tables (Purchase_Detail1 and PurchaseDtl) to compute VAT/Cess-inclusive landing costs ((prod_qty * prod_rate) * (100 + vat + cess) / 100) and reconcile GRN quantities against vendor POs (Fact_PO, Fact_Indent).",
+        "3. Exposing Unexplained Shrinkage (Fact_Inventory_Incident): Formulated deterministic logic comparing manual store waste logs (pos1.wastage—rat bites, torn packets, expiry) against theoretical System Waste:",
+      ],
+    },
+    {
+      type: "pre",
+      text: "Unexplained Shrinkage = (Opening SOH + Inward Stock Deliveries) - (Closing Physical Audit SOH + Total POS Sold Units) - Manually Logged Waste",
+    },
+    {
+      type: "ul",
+      items: [
+        "4. FIFO Batch Aging (Fact_SKU_Batch_Age): Computed batch-level inventory age and Remaining Qty (GRN Qty - Sold Qty after Receipt Time) to flag aging stock (<30d, 31–45d, >90d) without requiring batch-level barcode scanning at checkout.",
+        "5. Automated ABC & Velocity Feature Store (FACT_SKU_Classification): Partnered with our Data Scientist to implement monthly SQL window functions (PERCENT_RANK on 30-day rolling Rate of Sale) and deterministic OOS triggers (Store SOH ≤ 2 and < Safety Stock; DC DOH < 10 days) to feed clean training data into our replenishment models.",
+      ],
+    },
+    { type: "h2", text: "5. Business & Operational Impact" },
+    {
+      type: "ul",
+      items: [
+        "Eliminated 20 Hours/Month of Manual Work: Self-serve Looker Studio dashboards connected directly to scheduled BigQuery Fact tables replaced manual CSV reconciliation and recurring reporting requests across Finance, SCM, and Store Ops.",
+        "Reduced Data Sprint Cycles by 30% (2.5 Weeks → 2 Weeks): Because all base Fact/Dimension tables and metric definitions were standardized and signed off in the Base Data Foundation, releasing new dashboards or analytics features required minimal requirement clarification or schema rework.",
+        "15% Improvement in Replenishment Forecast Accuracy: Accurate OOS timestamps and daily SOH reconciliation prevented stockouts from being misclassified as zero demand, directly reducing fresh produce wastage and store stockouts on Class-A SKUs.",
+      ],
+    },
+  ],
+};
+
 export const workCaseStudies: CaseStudy[] = [
+  omnichannelDataFoundationCaseStudy,
   cleverTapCaseStudy,
   demandForecastingCaseStudy,
   lastMileEtaCaseStudy,
