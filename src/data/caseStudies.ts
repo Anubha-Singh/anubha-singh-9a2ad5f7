@@ -724,7 +724,7 @@ export const omnichannelDataFoundationCaseStudy: CaseStudy = {
     { type: "h2", text: "1. Hero Snapshot & Operational Pod" },
     {
       type: "p",
-      text: "As Product Manager for KPN Fresh's Base Data Foundation, I led a high-impact, lean 3-person pod (1 PM, 1 Data Engineer, 1 Data Scientist) to architect an enterprise Common Data Model (CDM) and automated reconciliation engine on Google BigQuery (kpn-prod-386813). The platform unified asynchronous data from legacy offline store POS terminals (pos1 / Blukode), application PostgreSQL databases, and Odoo ERP into a single source of truth feeding 7 domain Looker Studio dashboards.",
+      text: "As Product Manager for KPN Fresh's Base Data Foundation, I led a high-impact, lean 3-person pod (1 PM, 1 Data Engineer, 1 Data Scientist) to architect an enterprise Common Data Model (CDM) and automated reconciliation engine on Google BigQuery. The platform unified asynchronous data from legacy offline store POS terminals (pos1 / Blukode), application PostgreSQL databases, and Odoo ERP into a single source of truth feeding 7 domain Looker Studio dashboards.",
     },
     { type: "h2", text: "2. The Problem: Data Silos, Manual Reconciliation & Slow Sprint Cycles" },
     {
@@ -788,7 +788,7 @@ export const omnichannelDataFoundationCaseStudy: CaseStudy = {
     { type: "h2", text: "4. Executing the Common Data Model (CDM) & Reconciliation Engine" },
     {
       type: "p",
-      text: "Working hands-on in our lean 3-person pod (Me + 1 Data Engineer + 1 Data Scientist), I authored the schema mappings and SQL reconciliation logic on Google BigQuery (kpn-prod-386813):",
+      text: "Working hands-on in our lean 3-person pod (Me + 1 Data Engineer + 1 Data Scientist), I authored the schema mappings and SQL reconciliation logic on Google BigQuery:",
     },
     {
       type: "ul",
