@@ -785,28 +785,98 @@ export const omnichannelDataFoundationCaseStudy: CaseStudy = {
         ],
       ],
     },
-    { type: "h2", text: "4. Executing the Common Data Model (CDM) & Reconciliation Engine" },
+    {
+      type: "h2",
+      text: "4. Executing the Common Data Model (CDM), Star Schema & Reconciliation Engine",
+    },
     {
       type: "p",
-      text: "Working hands-on in our lean 3-person pod (Me + 1 Data Engineer + 1 Data Scientist), I authored the schema mappings and SQL reconciliation logic on Google BigQuery:",
+      text: "Because our offline stores ran on Blukode (pos1—our legacy POS) and our Distribution Centers ran on a third-party WMS, operational events were trapped in disconnected silos. To replace brittle manual CSV exports with a validated Single Source of Truth, I led execution across the Blukode POS team, third-party WMS integration owners, our Supply Chain pod, and our 3-person Data pod (1 PM, 1 Data Engineer, 1 Data Scientist) across three core phases:",
+    },
+    {
+      type: "h3",
+      text: "Phase A: Event-Driven Webhook Architecture & Ingestion Cadence",
+    },
+    {
+      type: "p",
+      text: "Instead of passive once-a-day dumps, we mapped outbound webhook triggers directly to state-changing database commits and barcode scan milestones across both external systems:",
+    },
+    {
+      type: "p",
+      text: "Blukode POS (pos1) Outbound Webhooks (Partnered with Blukode Team):",
     },
     {
       type: "ul",
       items: [
-        "1. Master ID Crosswalk (MDM): Built the mapping bridge connecting legacy POS location (LocId) and product IDs (prd_id) to modern ERP codes (odoo_site_code and ksin), ensuring zero orphaned transactions across online and offline channels.",
-        "2. Automated Invoice & Purchase Cost Reconciliation: Defined composite join logic across legacy purchase tables (Purchase_Detail1 and PurchaseDtl) to compute VAT/Cess-inclusive landing costs ((prod_qty * prod_rate) * (100 + vat + cess) / 100) and reconcile GRN quantities against vendor POs (Fact_PO, Fact_Indent).",
-        "3. Exposing Unexplained Shrinkage (Fact_Inventory_Incident): Formulated deterministic logic comparing manual store waste logs (pos1.wastage—rat bites, torn packets, expiry) against theoretical System Waste:",
+        "bill.settled & bill.returned (15–30 Min Micro-Batch / Real-Time): Triggered upon cashier payment settlement commits (UPI/EDC/Cash) to keep virtual store Stock-on-Hand (SOH) accurate during trading hours, with local offline queuing if store internet dropped.",
+        "grn.posted (Event-Driven Trigger): Fired the instant a store manager clicked 'Post/Confirm GRN' in Blukode's back-office module after verifying inward deliveries—pushing grn_id, LocId, prd_id, and received_qty immediately to our cloud staging endpoint.",
+        "wastage.logged & eod.closed (Pre-04:00 AM SLA): Triggered upon store waste write-off commits (pos1.wastage) and mandatory store 'Day-End Close' execution, enforced via a strict pre-04:00 AM cutoff so BigQuery was 100% reconciled before automated replenishment runs.",
+      ],
+    },
+    {
+      type: "p",
+      text: "Third-Party WMS Milestone Webhooks (Partnered with Supply Chain & WMS Teams):",
+    },
+    {
+      type: "ul",
+      items: [
+        "Subscribed to outbound WMS floor scan events—wave.created, picking.completed, and gate_pass.issued (ASN dispatch)—eliminating the 6–12 hour blind spot between physical DC truck dispatch and Odoo ERP stock updates.",
+      ],
+    },
+    {
+      type: "h3",
+      text: "Phase B: Defining the Star Schema (12+ Fact Tables, 5+ Dimension Tables) & Reconciliation Logic",
+    },
+    {
+      type: "p",
+      text: "Once raw payloads landed in BigQuery, I partnered with our Data Engineer and Data Scientist to architect a canonical Star Schema—defining 12+ Core Fact Tables, 5+ Conformed Dimension Tables, and pre-aggregated Metric Marts—backed by deterministic SQL reconciliation rules:",
+    },
+    {
+      type: "ul",
+      items: [
+        "1. Conformed Dimensions (5+ Tables — e.g., Dim_SKU_Master, Dim_Store_Location, Dim_Vendor, Dim_Calendar, Dim_Customer): Built the Master ID Crosswalk (MDM) bridging Blukode's local integer IDs (LocId, prd_id) with third-party WMS warehouse codes and Odoo ERP (odoo_site_code, ksin), ensuring zero orphaned transactions across channels.",
+        "2. Core Enterprise Fact Tables (12+ Tables — e.g., Fact_POS_Sales, Fact_PO, Fact_Indent, Fact_GRN, Fact_Inventory_Incident, Fact_Daily_SOH, Fact_SKU_Batch_Age, Fact_SKU_Classification):",
+        "• Invoice & Landing Cost Reconciliation: Joined Blukode purchase tables (Purchase_Detail1, PurchaseDtl) to compute VAT/Cess-inclusive Net Landing Costs ((prod_qty * prod_rate) * (100 + vat + cess) / 100) and reconcile store grn.posted events against WMS dispatch ASNs and vendor POs.",
+        "• Unexplained Shrinkage (Fact_Inventory_Incident): Formulated deterministic audit logic comparing manual Blukode waste logs (pos1.wastage) against theoretical System Waste:",
       ],
     },
     {
       type: "pre",
-      text: "Unexplained Shrinkage = (Opening SOH + Inward Stock Deliveries) - (Closing Physical Audit SOH + Total POS Sold Units) - Manually Logged Waste",
+      text: "Unexplained Shrinkage = (Opening SOH + Inward Deliveries) - (Closing Physical Audit SOH + Blukode POS Sold Units) - Manually Logged Waste",
     },
     {
       type: "ul",
       items: [
-        "4. FIFO Batch Aging (Fact_SKU_Batch_Age): Computed batch-level inventory age and Remaining Qty (GRN Qty - Sold Qty after Receipt Time) to flag aging stock (<30d, 31–45d, >90d) without requiring batch-level barcode scanning at checkout.",
-        "5. Automated ABC & Velocity Feature Store (FACT_SKU_Classification): Partnered with our Data Scientist to implement monthly SQL window functions (PERCENT_RANK on 30-day rolling Rate of Sale) and deterministic OOS triggers (Store SOH ≤ 2 and < Safety Stock; DC DOH < 10 days) to feed clean training data into our replenishment models.",
+        "• FIFO Batch Aging (Fact_SKU_Batch_Age): Computed batch-level inventory age (GRN Qty - Sold Qty after Receipt Time) using grn.posted timestamps to flag aging stock (<30d, 31–45d, >90d) without requiring batch-level barcode scanning at checkout.",
+        "• ML Feature Store (Fact_SKU_Classification): Implemented monthly SQL window functions (PERCENT_RANK on 30-day rolling Rate of Sale) and deterministic OOS triggers (Store SOH ≤ 2 and < Safety Stock; DC DOH < 10 days) for our Data Scientist's replenishment models.",
+      ],
+    },
+    {
+      type: "h3",
+      text: "Phase C: Metric Layer Governance, Dashboard UAT & \"Definition of Done\" (DoD)",
+    },
+    {
+      type: "p",
+      text: "To ensure business teams trusted the numbers without recurring debates, I established strict BI governance across our 7 domain Looker Studio dashboards:",
+    },
+    {
+      type: "ul",
+      items: [
+        "Centralized Metric Dictionary & Source of Truth: Authored and maintained the master business glossary locking in the exact SQL formulas, grain, inclusion/exclusion rules (e.g., excluding stockout days from Rate-of-Sale denominators), and edge-case handling for 100+ metrics.",
+        "Co-Designing & Auditing Looker Dashboards: Collaborated hands-on with the Data Engineer and Data Scientist to design the 7 domain Looker dashboards, running SQL reconciliation audits against raw Blukode POS ledgers, WMS dispatch logs, and Finance P&L sheets to verify 100% number accuracy before release.",
+      ],
+    },
+    {
+      type: "p",
+      text: "Strict \"Definition of Done\" (DoD) for Analytics Releases: Instituted a mandatory DoD checklist before any dashboard or metric table went live:",
+    },
+    {
+      type: "ul",
+      items: [
+        "1. Metric formula and grain documented and signed off in the central Metric Dictionary.",
+        "2. <0.5% variance verified between BigQuery Fact tables and source Blukode/WMS/Odoo totals over a 30-day backtest.",
+        "3. Pre-aggregated Metric Tables optimized to prevent full-table BigQuery scans and keep Looker dashboard load times fast.",
+        "4. Formal UAT sign-off completed with the respective Domain Head (SCM, Finance, Category, Store Ops).",
       ],
     },
     { type: "h2", text: "5. Business & Operational Impact" },
