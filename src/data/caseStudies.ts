@@ -721,7 +721,7 @@ export const omnichannelDataFoundationCaseStudy: CaseStudy = {
     "Supply Chain & Retail",
   ],
   blocks: [
-    { type: "h2", text: "1. Hero Snapshot & Operational Pod" },
+    { type: "h2", text: "1. Executive Summary & Operational Pod" },
     {
       type: "p",
       text: "As Product Manager for KPN Fresh's Base Data Foundation, I led a high-impact, lean 3-person pod (1 PM, 1 Data Engineer, 1 Data Scientist) to architect an enterprise Common Data Model (CDM) and automated reconciliation engine on Google BigQuery. The platform unified asynchronous data from legacy offline store POS terminals (pos1 / Blukode), application PostgreSQL databases, and Odoo ERP into a single source of truth feeding 7 domain Looker Studio dashboards.",
